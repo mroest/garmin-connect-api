@@ -1,0 +1,168 @@
+service:
+  name: PersonalHealthDashboard
+
+# Add the serverless-webpack plugin
+plugins:
+  - serverless-webpack
+  - serverless-offline
+
+#  Pool Id eu-west-2_hwda35xPV
+#  Pool ARN arn:aws:cognito-idp:eu-west-2:552281511161:userpool/eu-west-2_hwda35xPV
+#  App client ID 6b85ma6aotsan5p8l8g8evsi3
+#  Domain https://phd.auth.eu-west-2.amazoncognito.com
+#  Identity Pool ID eu-west-2:3bad1577-1fcd-47bb-83d5-419fd552d7d7
+#  API client ID
+
+provider:
+  name: aws
+  region: eu-west-2
+  stage: prod
+  runtime: nodejs8.10
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource:
+        - "arn:aws:dynamodb:eu-west-2:*:*"
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource:
+        - 'Fn::Join':
+            - ':'
+            - - 'arn:aws:ssm'
+              - Ref: 'AWS::Region'
+              - Ref: 'AWS::AccountId'
+              - 'parameter/gc_password'
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+
+resources:
+  Resources:
+    maxhr:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "maxhr"
+        AttributeDefinitions:
+          - AttributeName: "date"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "date"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    distance:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "distance"
+        AttributeDefinitions:
+          - AttributeName: "date"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "date"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    duration:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "duration"
+        AttributeDefinitions:
+          - AttributeName: "date"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "date"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    steps:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "steps"
+        AttributeDefinitions:
+          - AttributeName: "date"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "date"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    wellness:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: "wellness"
+        AttributeDefinitions:
+          - AttributeName: "date"
+            AttributeType: "S"
+        KeySchema:
+          - AttributeName: "date"
+            KeyType: "HASH"
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+functions:
+  heartrate:
+    handler: serverless/handler.heartRate
+    events:
+      - schedule: rate(30 minutes)
+  resthr:
+    handler: serverless/handler.restHr
+    events:
+      - schedule: rate(30 minutes)
+  distance:
+    handler: serverless/handler.distance
+    events:
+      - schedule: rate(30 minutes)
+  duration:
+    handler: serverless/handler.duration
+    events:
+      - schedule: rate(30 minutes)
+  steps:
+    handler: serverless/handler.steps
+    events:
+      - schedule: rate(30 minutes)
+  api-heartrate:
+    handler: serverless/api.heartrate
+    events:
+      - http:
+          path: heartrate
+          method: get
+          cors: true
+          authorizer: aws_iam
+  api-distance:
+    handler: serverless/api.distance
+    events:
+      - http:
+          path: distance
+          method: get
+          cors: true
+          authorizer: aws_iam
+  api-duration:
+    handler: serverless/api.duration
+    events:
+      - http:
+          path: duration
+          method: get
+          cors: true
+          authorizer: aws_iam
+  api-steps:
+    handler: serverless/api.steps
+    events:
+      - http:
+          path: steps
+          method: get
+          cors: true
+          authorizer: aws_iam

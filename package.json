@@ -1,0 +1,37 @@
+{
+  "name": "Garmin.MaxHR",
+  "version": "1.0.0",
+  "description": "Garmin MaxHr",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.2.5",
+    "@types/moment": "^2.13.0",
+    "axios": "^0.18.0",
+    "axios-cookiejar-support": "^0.4.2",
+    "immutable": "^4.0.0-rc.12",
+    "moment": "^2.23.0",
+    "serverless": "^1.35.1",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.1",
+    "@types/immutable": "^3.8.7",
+    "@types/node": "^8.10.38",
+    "aws-sdk": "^2.381.0",
+    "serverless-offline": "^3.31.3",
+    "serverless-webpack": "^5.2.0",
+    "source-map-support": "^0.5.6",
+    "ts-loader": "^4.5.0",
+    "tslint": "^5.12.0",
+    "tslint-config-airbnb": "^5.11.1",
+    "tslint-react": "^3.6.0",
+    "typescript": "^3.2.2",
+    "webpack": "^4.27.1",
+    "webpack-node-externals": "^1.7.2"
+  },
+  "author": "Martin Roest",
+  "license": "MIT"
+}
