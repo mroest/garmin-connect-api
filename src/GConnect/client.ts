@@ -184,7 +184,7 @@ class GConnect {
     }
     const response = await Axios.post(
       config.GARMIN_CONNECT.SSO_URL,
-      `username=roest.martin%40gmail.com&embed=false&password=${getParameterResult.Parameter.Value}`,
+      `${config.GARMIN_CONNECT.EMAIL}&embed=false&password=${getParameterResult.Parameter.Value}`,
       {
         ...this.requestConfig, ...{
           headers: {
