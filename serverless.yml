@@ -134,6 +134,14 @@ functions:
     handler: serverless/handler.steps
     events:
       - schedule: rate(30 minutes)
+  sleep:
+    handler: serverless/handler.sleep
+    events:
+      - schedule: rate(30 minutes)
+  stress:
+    handler: serverless/handler.stress
+    events:
+      - schedule: rate(30 minutes)
   api-heartrate:
     handler: serverless/api.heartrate
     events:
@@ -163,6 +171,14 @@ functions:
     events:
       - http:
           path: steps
+          method: get
+          cors: true
+          authorizer: aws_iam
+  api-wellness:
+    handler: serverless/api.wellness
+    events:
+      - http:
+          path: wellness
           method: get
           cors: true
           authorizer: aws_iam

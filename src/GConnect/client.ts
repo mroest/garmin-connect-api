@@ -1,4 +1,3 @@
-import { MonthlyRestHrCollection, MonthlyRestHrInterface } from '../Entities/MonthlyRestHr';
 import Axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import axiosCookieJarSupport from 'axios-cookiejar-support';
 import tough, { CookieJar } from 'tough-cookie';
@@ -10,7 +9,11 @@ import { SSM } from 'aws-sdk';
 import { MonthlyStepsCollection, MonthlyStepsInterface } from '../Entities/MonthlySteps';
 import moment from 'moment';
 import config from '../../config';
-import { WeeklySleepDuration, WeeklySleepDurationCollection } from '../Entities/Wellness';
+import {
+  WeeklyRestHeartRateCollection,
+  WeeklySleepDuration,
+  WeeklySleepDurationCollection, WeeklyStressLevelCollection,
+} from '../Entities/Wellness';
 
 export type GConnectTicket = string;
 
@@ -21,12 +24,6 @@ interface ActivityParams {
   groupByParentActivityType: boolean;
   endDate: string;
   metric: string;
-}
-
-interface WellnessParams {
-  fromMonthStartDate: string;
-  untilMonthStartDate: string;
-  metricId: number;
 }
 
 class GConnect {
@@ -42,14 +39,6 @@ class GConnect {
       startDate: moment().subtract(3, 'months').format('YYYY-MM-01'),
       endDate: this.getEndDate(),
       metric,
-    };
-  }
-
-  private static getWellnessParams(metric?: number): WellnessParams {
-    return {
-      fromMonthStartDate: moment().subtract(3, 'months').format('YYYY-MM-01'),
-      untilMonthStartDate: this.getEndDate(),
-      metricId: metric || 29,
     };
   }
 
@@ -74,16 +63,21 @@ class GConnect {
 
   public async getWeeklySleepDuration(): Promise<WeeklySleepDurationCollection> {
     await this.login();
+    const wellnessParams = {
+      fromWeekStartDate: moment().subtract(3, 'months').format('YYYY-MM-01'),
+      metricId: 26,
+    };
+
     const response = await Axios.get(
       config.GARMIN_CONNECT.WELLNESS_WEEKLY_URL,
-      { ...this.requestConfig, ...{ params: GConnect.getWellnessParams(26) } },
+      { ...this.requestConfig, ...{ params: wellnessParams } },
     );
-    if (!response.data.allMetrics.metricsMap.WELLNESS_TOTAL_STEPS) {
+    if (!response.data.allMetrics.metricsMap.SLEEP_SLEEP_DURATION) {
       throw new Error('Invalid response');
     }
     return List(response.data.allMetrics.metricsMap.SLEEP_SLEEP_DURATION.map((item: any): WeeklySleepDuration => {
       return {
-        date: `${item.month.year}-${String(item.month.monthId).padStart(2, '0')}-01`,
+        date: item.startDateOfWeek,
         sleep: item.value,
       };
     }));
@@ -107,10 +101,14 @@ class GConnect {
 
   public async getMonthlySteps(): Promise<MonthlyStepsCollection> {
     await this.login();
+    const wellnessParams = {
+      fromMonthStartDate: moment().subtract(3, 'months').format('YYYY-MM-01'),
+      metricId: 29,
+    };
 
     const response = await Axios.get(
       config.GARMIN_CONNECT.WELLNESS_MONTHLY_URL,
-      { ...this.requestConfig, ...{ params: GConnect.getWellnessParams() } },
+      { ...this.requestConfig, ...{ params: wellnessParams } },
     );
 
     if (!response.data.allMetrics.metricsMap.WELLNESS_TOTAL_STEPS) {
@@ -124,19 +122,48 @@ class GConnect {
     }));
   }
 
-  public async getMonthlyRestHr(): Promise<MonthlyRestHrCollection> {
+  public async getWeeklyRestHr(): Promise<WeeklyRestHeartRateCollection> {
     await this.login();
+
+    const wellnessParams = {
+      fromWeekStartDate: moment().subtract(3, 'months').format('YYYY-MM-01'),
+      metricId: 60,
+    };
+
     const response = await Axios.get(
-      config.GARMIN_CONNECT.WELLNESS_MONTHLY_URL,
-      { ...this.requestConfig, ...{ params: GConnect.getWellnessParams(60) } },
+      config.GARMIN_CONNECT.WELLNESS_WEEKLY_URL,
+      { ...this.requestConfig, ...{ params: wellnessParams } },
     );
     if (!response.data.allMetrics.metricsMap.WELLNESS_RESTING_HEART_RATE) {
       throw new Error('Invalid response');
     }
-    return List(response.data.allMetrics.metricsMap.WELLNESS_RESTING_HEART_RATE.map((item: any): MonthlyRestHrInterface => {
+    return List(response.data.allMetrics.metricsMap.WELLNESS_RESTING_HEART_RATE.map((item: any) => {
       return {
-        date: `${item.month.year}-${String(item.month.monthId).padStart(2, '0')}-01`,
+        date: item.startDateOfWeek,
         restHr: item.value,
+      };
+    }));
+  }
+
+  public async getWeeklyStressLevel(): Promise<WeeklyStressLevelCollection> {
+    await this.login();
+
+    const wellnessParams = {
+      fromWeekStartDate: moment().subtract(3, 'months').format('YYYY-MM-01'),
+      metricId: 63,
+    };
+
+    const response = await Axios.get(
+      config.GARMIN_CONNECT.WELLNESS_WEEKLY_URL,
+      { ...this.requestConfig, ...{ params: wellnessParams } },
+    );
+    if (!response.data.allMetrics.metricsMap.WELLNESS_AVERAGE_STRESS) {
+      throw new Error('Invalid response');
+    }
+    return List(response.data.allMetrics.metricsMap.WELLNESS_AVERAGE_STRESS.map((item: any) => {
+      return {
+        date: item.startDateOfWeek,
+        stressLevel: item.value,
       };
     }));
   }
@@ -184,7 +211,7 @@ class GConnect {
     }
     const response = await Axios.post(
       config.GARMIN_CONNECT.SSO_URL,
-      `${config.GARMIN_CONNECT.EMAIL}&embed=false&password=${getParameterResult.Parameter.Value}`,
+      `username=${config.GARMIN_CONNECT.EMAIL}&embed=false&password=${getParameterResult.Parameter.Value}`,
       {
         ...this.requestConfig, ...{
           headers: {

@@ -1,19 +1,23 @@
 import { DynamoDB } from 'aws-sdk';
 
-export async function heartrate(event, context, callback) {
-  await handler(getMaxHr, callback);
+export function heartrate(event, context, callback) {
+  handler(getMaxHr, callback);
 }
 
-export async function distance(event, context, callback) {
-  await handler(getDistance, callback);
+export function distance(event, context, callback) {
+  handler(getDistance, callback);
 }
 
-export async function duration(event, context, callback) {
-  await handler(getDuration, callback);
+export function duration(event, context, callback) {
+  handler(getDuration, callback);
 }
 
-export async function steps(event, context, callback) {
-  await handler(getSteps, callback);
+export function steps(event, context, callback) {
+  handler(getSteps, callback);
+}
+
+export function wellness(event, context, callback) {
+  handler(getWellness, callback);
 }
 
 const handler = async (itemCaller: () => Promise<any>, callbackHandler) => {
@@ -57,4 +61,9 @@ const getDuration = async () => {
 const getSteps = async () => {
   const dbClient = new DynamoDB.DocumentClient();
   return dbClient.scan({ TableName: 'steps' }).promise();
+};
+
+const getWellness = async () => {
+  const dbClient = new DynamoDB.DocumentClient();
+  return dbClient.scan({ TableName: 'wellness' }).promise();
 };
