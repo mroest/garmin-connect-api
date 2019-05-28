@@ -203,7 +203,12 @@ class GConnect {
   }
 
   private async login(): Promise<GConnectTicket> {
-    await Axios.get(config.GARMIN_CONNECT.SSO_URL, this.requestConfig);
+    const loginForm = await Axios.get(config.GARMIN_CONNECT.SSO_URL, this.requestConfig);
+    const csrfMatch = loginForm.data.match(/_csrf" value="([0-9A-Z]+)"/);
+    if (!csrfMatch) {
+      throw Error('Unable to login. Can not find CSRF token');
+    }
+    const token = csrfMatch.pop();
     const paramStore = new SSM();
     const getParameterResult = await paramStore.getParameter({ Name: 'gc_password' }).promise();
     if (!getParameterResult.Parameter) {
@@ -211,10 +216,11 @@ class GConnect {
     }
     const response = await Axios.post(
       config.GARMIN_CONNECT.SSO_URL,
-      `username=${config.GARMIN_CONNECT.EMAIL}&embed=false&password=${getParameterResult.Parameter.Value}`,
+      `username=${config.GARMIN_CONNECT.EMAIL}&embed=false&password=${getParameterResult.Parameter.Value}&_csrf=${token}`,
       {
         ...this.requestConfig, ...{
           headers: {
+            Referer: config.GARMIN_CONNECT.SSO_URL,
             'Content-Type': 'application/x-www-form-urlencoded',
           },
         },
