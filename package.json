@@ -9,7 +9,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
     "@types/moment": "^2.13.0",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "axios-cookiejar-support": "^0.4.2",
     "immutable": "^4.0.0-rc.12",
     "moment": "^2.23.0",
